@@ -342,3 +342,21 @@ MonoBehaviour:
     bottomFaceTextureID: 1
     leftFaceTextureID: 2
     rightFaceTextureID: 2
+  - blockName: Sand
+    isSolid: 1
+    backFaceTextureID: 10
+    frontFaceTextureID: 10
+    topFaceTextureID: 10
+    bottomFaceTextureID: 10
+    leftFaceTextureID: 10
+    rightFaceTextureID: 10
+  - blockName: Dirt
+    isSolid: 1
+    backFaceTextureID: 1
+    frontFaceTextureID: 1
+    topFaceTextureID: 1
+    bottomFaceTextureID: 1
+    leftFaceTextureID: 1
+    rightFaceTextureID: 1
+  seed: 123456
+  biome: {fileID: 11400000, guid: 7de1353f452ea5a41b53b9da7510007d, type: 2}

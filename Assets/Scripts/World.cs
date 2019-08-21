@@ -25,11 +25,18 @@ public class World : MonoBehaviour
     ChunkCoord playerLastChunkCoord;
     ChunkCoord playerChunkCoord;
 
+    public int seed;
+
+    public BiomeAttributes biome;
+
     void Start()
     {
+        Random.InitState(seed);
+
         spawnPosition = new Vector3((WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f, Chunk.CHUNK_HEIGHT + 2f, (WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f);
         GenerateWorld();
         playerLastChunkCoord = GetChunkFromVector3(spawnPosition);
+        //CreateChunk(0, 0);
     }
 
     void Update()
@@ -119,14 +126,40 @@ public class World : MonoBehaviour
 
     public byte GetVoxel(Vector3 position)
     {
+        int y = Mathf.FloorToInt(position.y);
+
+        // Immutable pass - things that will always be the case, like outside the world is air
+
         if (!IsVoxelInWorld(position))
             return 0;
-        if (position.y < 1)
-            return 1;
-        else if (position.y == Chunk.CHUNK_HEIGHT - 1)
-            return 3;
+        if (y == 0)
+            return 1; // If it is the lowest layer, return bedrock
+
+        // First terrain pass - first height variation
+        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DNoise(new Vector2(position.x, position.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
+        byte voxelValue = 0;
+
+        if (y == terrainHeight)
+            voxelValue = 3;
+        else if (y < terrainHeight && y > terrainHeight - 4)
+            voxelValue = 5;
+        else if (y > terrainHeight)
+            return 0;
         else
-            return 2;
+            voxelValue = 2;
+
+        // Second terrain pass - 
+        if (voxelValue == 2)
+        {
+            foreach (Lode lode in biome.lodes)
+            {
+                if (y > lode.minHeight && y < lode.maxHeight)
+                    if (Noise.Get3DNoise(position, lode.noiseOffset, lode.scale, lode.threshold))
+                        voxelValue = lode.blockID;
+            }
+        }
+
+        return voxelValue;
     }
 }
 

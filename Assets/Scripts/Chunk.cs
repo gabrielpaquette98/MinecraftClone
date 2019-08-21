@@ -5,8 +5,8 @@ using UnityEngine;
 // Data needed to create and manage a chunk.
 public class Chunk
 {
-    public static readonly int CHUNK_WIDTH = 5;
-    public static readonly int CHUNK_HEIGHT = 16;
+    public static readonly int CHUNK_WIDTH = 16;
+    public static readonly int CHUNK_HEIGHT = 128;
 
     // Used to create and display a mesh, which is a visual representation of the squares we will display. 
     public MeshRenderer meshRenderer;   // Displays the mesh, and manages how it is displayed (material, etc)
@@ -61,7 +61,10 @@ public class Chunk
             {
                 for (int z = 0; z < CHUNK_WIDTH; z++)
                 {
-                    AddVoxelDataToChunk(new Vector3(x, y, z));
+                    if (world.blocktypes[voxelMap[x,y,z]].isSolid)
+                    {
+                        AddVoxelDataToChunk(new Vector3(x, y, z));
+                    }
                 }
             }
         }
@@ -165,8 +168,8 @@ public class Chunk
 
         y = 1f - y - VoxelData.NormalizedBlockTextureSize;
 
-        uvs.Add(new Vector2(x,y));
-        uvs.Add(new Vector2(x,y + VoxelData.NormalizedBlockTextureSize));
+        uvs.Add(new Vector2(x, y));
+        uvs.Add(new Vector2(x, y + VoxelData.NormalizedBlockTextureSize));
         uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y));
         uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y + VoxelData.NormalizedBlockTextureSize));
     }
