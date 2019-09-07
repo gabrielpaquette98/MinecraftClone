@@ -25,7 +25,7 @@ public class Chunk
     // bool[,,] voxelMap = new bool[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
 
     // array to indicate what type of block is used. Air is not added to the mesh data
-    byte[,,] voxelMap = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
+    public byte[,,] voxelMap = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
 
     World world;
     GameObject chunkGameObject;
