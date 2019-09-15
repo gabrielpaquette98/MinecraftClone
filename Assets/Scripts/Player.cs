@@ -11,11 +11,13 @@ public class Player : MonoBehaviour
 
     Vector3 velocity;
 
+    Vector3 rotationVector;
+
     [SerializeField]
     Transform camera;
     [SerializeField]
     World world;
-    
+
     public float viewSpeed = 5;
     public float walkSpeed = 5;
     public float runSpeed = 7;
@@ -28,11 +30,14 @@ public class Player : MonoBehaviour
     bool isJumping;
     bool isSprinting;
 
+    float rotationY = 0;
+    float rotationX = 0;
+
     void Update()
     {
         GetPlayerInput();
     }
-    
+
     void FixedUpdate()
     {
         UpdateVelocity();
@@ -70,8 +75,12 @@ public class Player : MonoBehaviour
 
     void UpdateRotation()
     {
-        transform.Rotate(Vector3.up * mouseHorizontal * viewSpeed);
-        camera.Rotate(Vector3.right * -mouseVertical * viewSpeed);
+        rotationX += mouseHorizontal * viewSpeed;
+        rotationY += mouseVertical * viewSpeed;
+        rotationY = Mathf.Clamp(rotationY, -90f, 90f);
+
+        camera.transform.localRotation = Quaternion.Euler(-rotationY, 0f, 0f);
+        transform.rotation = Quaternion.Euler(0f, rotationX, 0f);
     }
 
     void UpdateVelocity()
@@ -90,7 +99,7 @@ public class Player : MonoBehaviour
             verticalMomentum += Time.fixedDeltaTime * gravity;
         }
 
-        velocity += Vector3.up * verticalMomentum * Time.fixedDeltaTime; 
+        velocity += Vector3.up * verticalMomentum * Time.fixedDeltaTime;
 
         if ((velocity.x < 0 && CheckLeftCollision()) || (velocity.x > 0 && CheckRightCollision()))
         {
@@ -98,10 +107,10 @@ public class Player : MonoBehaviour
         }
 
         if (velocity.y < 0)
-        velocity.y = CheckDownSpeed(velocity.y);
+            velocity.y = CheckDownSpeed(velocity.y);
         else if (velocity.y > 0)
-        velocity.y = CheckUpSpeed(velocity.y);
-        
+            velocity.y = CheckUpSpeed(velocity.y);
+
         if ((velocity.z < 0 && CheckBackCollision()) || (velocity.z > 0 && CheckFrontCollision()))
         {
             velocity.z = 0;
@@ -110,10 +119,10 @@ public class Player : MonoBehaviour
 
     float CheckDownSpeed(float downSpeed)
     {
-        if (world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y + downSpeed, transform.position.z - colliderWidth) ||
-            world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y + downSpeed, transform.position.z - colliderWidth) ||
-            world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y + downSpeed, transform.position.z + colliderWidth) ||
-            world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y + downSpeed, transform.position.z + colliderWidth))
+        if (world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + downSpeed, transform.position.z - colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + downSpeed, transform.position.z - colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + downSpeed, transform.position.z + colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + downSpeed, transform.position.z + colliderWidth)))
         {
             isGrounded = true;
             return 0;
@@ -127,10 +136,10 @@ public class Player : MonoBehaviour
 
     float CheckUpSpeed(float upSpeed)
     {
-        if (world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z - colliderWidth) ||
-            world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z - colliderWidth) ||
-            world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z + colliderWidth) ||
-            world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z + colliderWidth))
+        if (world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z - colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z - colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z + colliderWidth)) ||
+            world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z + colliderWidth)))
         {
             return 0;
         }
@@ -142,23 +151,23 @@ public class Player : MonoBehaviour
 
     bool CheckFrontCollision()
     {
-        return (world.CheckForVoxel(transform.position.x, transform.position.y, transform.position.z + colliderWidth) ||
-                world.CheckForVoxel(transform.position.x, transform.position.y + 1, transform.position.z + colliderWidth));
+        return (world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y, transform.position.z + colliderWidth)) ||
+                world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y + 1, transform.position.z + colliderWidth)));
     }
     bool CheckBackCollision()
     {
-        return (world.CheckForVoxel(transform.position.x, transform.position.y, transform.position.z - colliderWidth) ||
-                world.CheckForVoxel(transform.position.x, transform.position.y + 1, transform.position.z - colliderWidth));
+        return (world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y, transform.position.z - colliderWidth)) ||
+                world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y + 1, transform.position.z - colliderWidth)));
     }
     bool CheckLeftCollision()
     {
-        return (world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y, transform.position.z) ||
-                world.CheckForVoxel(transform.position.x - colliderWidth, transform.position.y + 1, transform.position.z));
+        return (world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y, transform.position.z)) ||
+                world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + 1, transform.position.z)));
     }
     bool CheckRightCollision()
     {
-        return (world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y, transform.position.z) ||
-                world.CheckForVoxel(transform.position.x + colliderWidth, transform.position.y + 1, transform.position.z));
+        return (world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y, transform.position.z)) ||
+                world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + 1, transform.position.z)));
     }
 
     void Jump()

@@ -32,10 +32,24 @@ public class Chunk
 
     public ChunkCoord coord;
 
-    public Chunk(World worldReference, ChunkCoord position)
+    private bool isChunkActive;
+
+    public bool isVoxelMapPopulated = false;
+
+    public Chunk(World worldReference, ChunkCoord position, bool generateOnLoad)
     {
         world = worldReference;
         coord = position;
+        isActive = true;
+
+        if (generateOnLoad)
+        {
+            InitChunk();
+        }
+    }
+
+    public void InitChunk()
+    {
         chunkGameObject = new GameObject();
         meshFilter = chunkGameObject.AddComponent<MeshFilter>();
         meshRenderer = chunkGameObject.AddComponent<MeshRenderer>();
@@ -61,7 +75,7 @@ public class Chunk
             {
                 for (int z = 0; z < CHUNK_WIDTH; z++)
                 {
-                    if (world.blocktypes[voxelMap[x,y,z]].isSolid)
+                    if (world.blocktypes[voxelMap[x, y, z]].isSolid)
                     {
                         AddVoxelDataToChunk(new Vector3(x, y, z));
                     }
@@ -82,7 +96,7 @@ public class Chunk
         int z = Mathf.FloorToInt(voxelPosition.z);
 
         if (!IsVoxelInChunk(x, y, z))
-            return world.blocktypes[world.GetVoxel(voxelPosition + position)].isSolid;
+            return world.CheckForVoxel(voxelPosition + position);
 
         return world.blocktypes[voxelMap[x, y, z]].isSolid; // if it is solid, then it will be displayed
     }
@@ -102,6 +116,8 @@ public class Chunk
                 }
             }
         }
+
+        isVoxelMapPopulated = true;
     }
 
     /// <summary>
@@ -132,6 +148,19 @@ public class Chunk
             }
         }
     }
+
+    public byte GetVoxelFromGlobalVector3(Vector3 globalPosition)
+    {
+        int x = Mathf.FloorToInt(globalPosition.x);
+        int y = Mathf.FloorToInt(globalPosition.y);
+        int z = Mathf.FloorToInt(globalPosition.z);
+
+        x -= Mathf.FloorToInt(position.x);
+        z -= Mathf.FloorToInt(position.z);
+
+        return voxelMap[x, y, z];
+    }
+
     /// <summary>
     /// Creates the base mesh data from the lists
     /// </summary>
@@ -181,8 +210,15 @@ public class Chunk
 
     public bool isActive
     {
-        get { return chunkGameObject.activeSelf; }
-        set { chunkGameObject.SetActive(value); }
+        get { return isChunkActive; }
+        set
+        {
+            isChunkActive = value;
+            if (chunkGameObject != null)
+            {
+                chunkGameObject.SetActive(true);
+            }
+        }
     }
 
     public Vector3 position
@@ -195,6 +231,15 @@ public class ChunkCoord
 {
     public int x;
     public int y;
+
+    public ChunkCoord(Vector3 position)
+    {
+        int _x = Mathf.FloorToInt(position.x);
+        int _z = Mathf.FloorToInt(position.z);
+
+        x = _x / Chunk.CHUNK_WIDTH;
+        y = _z / Chunk.CHUNK_WIDTH;
+    }
 
     public ChunkCoord(int _x, int _y)
     {

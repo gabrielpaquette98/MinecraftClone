@@ -407,8 +407,8 @@ MonoBehaviour:
   camera: {fileID: 534669905}
   world: {fileID: 589838400}
   viewSpeed: 5
-  walkSpeed: 5
-  runSpeed: 7
+  walkSpeed: 3
+  runSpeed: 6
   gravity: -9.8
   jumpForce: 5
   colliderWidth: 0.3
