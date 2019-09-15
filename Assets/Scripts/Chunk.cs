@@ -216,7 +216,7 @@ public class Chunk
             isChunkActive = value;
             if (chunkGameObject != null)
             {
-                chunkGameObject.SetActive(true);
+                chunkGameObject.SetActive(value);
             }
         }
     }

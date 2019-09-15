@@ -39,8 +39,7 @@ public class World : MonoBehaviour
 
         spawnPosition = new Vector3((WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f, Chunk.CHUNK_HEIGHT - 50f, (WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f);
         GenerateWorld();
-        playerLastChunkCoord = GetChunkFromVector3(spawnPosition);
-        //CreateChunk(0, 0);
+        playerLastChunkCoord = GetChunkFromVector3(player.position);
     }
 
     void Update()
@@ -49,7 +48,6 @@ public class World : MonoBehaviour
         if (!playerChunkCoord.Equals(playerLastChunkCoord))
         {
             CheckViewDistance();
-            playerLastChunkCoord = playerChunkCoord;
         }
 
         if (chunksToCreate.Count > 0 && !isCreatingChunks)
@@ -94,6 +92,7 @@ public class World : MonoBehaviour
     void CheckViewDistance()
     {
         ChunkCoord coord = GetChunkFromVector3(player.position);
+        playerLastChunkCoord = playerChunkCoord;
 
         List<ChunkCoord> previouslyActiveChunks = new List<ChunkCoord>(activeChunks);
 
@@ -101,23 +100,24 @@ public class World : MonoBehaviour
         {
             for (int j = coord.y - VIEW_DISTANCE_IN_CHUNKS; j < coord.y + VIEW_DISTANCE_IN_CHUNKS; j++)
             {
-                if (IsChunkInWorld(new ChunkCoord(i, j)))
+                ChunkCoord currentCoord = new ChunkCoord(i, j);
+                if (IsChunkInWorld(currentCoord))
                 {
                     if (chunks[i, j] == null)
                     {
-                        chunks[i, j] = new Chunk(this, new ChunkCoord(i, j), false);
-                        chunksToCreate.Add(new ChunkCoord(i, j));
+                        chunks[i, j] = new Chunk(this, currentCoord, false);
+                        chunksToCreate.Add(currentCoord);
                     }
                     else if (!chunks[i, j].isActive)
                     {
                         chunks[i, j].isActive = true;
                     }
-                    activeChunks.Add(new ChunkCoord(i, j));
+                    activeChunks.Add(currentCoord);
                 }
 
                 for (int k = 0; k < previouslyActiveChunks.Count; k++)
                 {
-                    if (previouslyActiveChunks[k].Equals(new ChunkCoord(i, j)))
+                    if (previouslyActiveChunks[k].Equals(currentCoord))
                     {
                         previouslyActiveChunks.RemoveAt(k);
                     }
@@ -125,9 +125,9 @@ public class World : MonoBehaviour
             }
         }
 
-        foreach (ChunkCoord item in previouslyActiveChunks)
+        foreach (ChunkCoord c in previouslyActiveChunks)
         {
-            chunks[item.x, item.y].isActive = false;
+            chunks[c.x, c.y].isActive = false;
         }
 
     }
