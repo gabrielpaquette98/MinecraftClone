@@ -123,18 +123,18 @@ public class Chunk
     /// <summary>
     /// Creates a new voxel and adds it to the mesh data of the chunk
     /// </summary>
-    /// <param name="chunkPosition">World position of the chunk</param>
-    void AddVoxelDataToChunk(Vector3 chunkPosition)
+    /// <param name="voxelPosition">World position of the chunk</param>
+    void AddVoxelDataToChunk(Vector3 voxelPosition)
     {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 6; i++) // for each faces of the cube/voxel
         {
-            if (!CheckVoxel(chunkPosition + VoxelData.voxelFaceChecks[i]))
+            if (!CheckVoxel(voxelPosition + VoxelData.voxelFaceChecks[i])) // if the voxel adjacent to the face is not solid (meaning this face is visible)
             {
-                for (int j = 0; j < 4; j++)
+                for (int j = 0; j < 4; j++) // Add all four vertices of the face
                 {
-                    meshVertices.Add(chunkPosition + VoxelData.voxelVertices[VoxelData.voxelTriangles[i, j]]);
+                    meshVertices.Add(voxelPosition + VoxelData.voxelVertices[VoxelData.voxelTriangles[i, j]]);
                 }
-                byte blockID = voxelMap[(int)chunkPosition.x, (int)chunkPosition.y, (int)chunkPosition.z];
+                byte blockID = voxelMap[(int)voxelPosition.x, (int)voxelPosition.y, (int)voxelPosition.z];
                 AddTexture(world.blocktypes[blockID].GetTextureID(i));
 
                 meshTriangles.Add(vertexIndex);
