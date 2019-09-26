@@ -9,20 +9,17 @@ public class Chunk
     public static readonly int CHUNK_HEIGHT = 128;
 
     // Used to create and display a mesh, which is a visual representation of the squares we will display. 
-    public MeshRenderer meshRenderer;   // Displays the mesh, and manages how it is displayed (material, etc)
-    public MeshFilter meshFilter;       // Stores mesh data
+    MeshRenderer meshRenderer;   // Displays the mesh, and manages how it is displayed (material, etc)
+    MeshFilter meshFilter;       // Stores mesh data
     // note: for the purpose of testing, we can make an empty gameobject, name it Chunk, and add it
     //       both the attributes above. Add our script and link them to the attributes. Could it be
     //       left "public", or should we change it to "[SerializeField]" ?
 
-    // Used to stode the vertices, triangles and texture/material data of the chunk
+    // Used to store the vertices, triangles and texture/material data of the chunk
     int vertexIndex = 0;
     List<Vector3> meshVertices = new List<Vector3>();
     List<int> meshTriangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
-
-    // array that keeps track of which cube are to be included in the mesh and which are invisible
-    // bool[,,] voxelMap = new bool[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
 
     // array to indicate what type of block is used. Air is not added to the mesh data
     public byte[,,] voxelMap = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
@@ -60,15 +57,16 @@ public class Chunk
         chunkGameObject.name = "Chunk " + coord.x + ", " + coord.y;
 
         PopulateVoxelMap();
-        CreateChunkMeshData();
-        CreateChunkMesh();
+        UpdateChunkData();
     }
 
     /// <summary>
     /// Function that creates the mesh data and add all the voxels to the chunk
     /// </summary>
-    void CreateChunkMeshData()
+    void UpdateChunkData()
     {
+        ClearMeshData();
+
         for (int x = 0; x < CHUNK_WIDTH; x++)
         {
             for (int y = 0; y < CHUNK_HEIGHT; y++)
@@ -82,6 +80,8 @@ public class Chunk
                 }
             }
         }
+
+        CreateChunkMesh();
     }
 
     /// <summary>
@@ -178,6 +178,45 @@ public class Chunk
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
+    }
+
+    void ClearMeshData()
+    {
+        vertexIndex = 0;
+        meshTriangles.Clear();
+        meshVertices.Clear();
+        uvs.Clear();
+    }
+
+    public void EditVoxel(Vector3 voxelPosition, byte newBlockID)
+    {
+        int x = Mathf.FloorToInt(voxelPosition.x);
+        int y = Mathf.FloorToInt(voxelPosition.y);
+        int z = Mathf.FloorToInt(voxelPosition.z);
+
+        x -= Mathf.FloorToInt(position.x);
+        z -= Mathf.FloorToInt(position.z);
+
+        voxelMap[x, y, z] = newBlockID;
+
+        UpdateSurroundingVoxels(x, y, z);
+
+        UpdateChunkData();
+    }
+
+    void UpdateSurroundingVoxels(int x, int y, int z)
+    {
+        Vector3 thisVoxel = new Vector3(x, y, z);
+
+        for (int i = 0; i < 6; i++)
+        {
+            Vector3 currentVoxel = thisVoxel + VoxelData.voxelFaceChecks[i];
+            if (!IsVoxelInChunk((int)currentVoxel.x, (int)currentVoxel.y, (int)currentVoxel.z))
+            {
+                // Update other chunks if the adjacent voxel is not in this chunk
+                world.GetChunkFromVector3(currentVoxel + position).UpdateChunkData();
+            }
+        }
     }
 
     /// <summary>

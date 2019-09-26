@@ -39,12 +39,12 @@ public class World : MonoBehaviour
 
         spawnPosition = new Vector3((WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f, Chunk.CHUNK_HEIGHT - 50f, (WORLD_WIDTH_IN_CHUNKS * Chunk.CHUNK_WIDTH) / 2f);
         GenerateWorld();
-        playerLastChunkCoord = GetChunkFromVector3(player.position);
+        playerLastChunkCoord = GetChunkCoordFromVector3(player.position);
     }
 
     void Update()
     {
-        playerChunkCoord = GetChunkFromVector3(player.position);
+        playerChunkCoord = GetChunkCoordFromVector3(player.position);
         if (!playerChunkCoord.Equals(playerLastChunkCoord))
         {
             CheckViewDistance();
@@ -91,7 +91,7 @@ public class World : MonoBehaviour
 
     void CheckViewDistance()
     {
-        ChunkCoord coord = GetChunkFromVector3(player.position);
+        ChunkCoord coord = GetChunkCoordFromVector3(player.position);
         playerLastChunkCoord = playerChunkCoord;
 
         List<ChunkCoord> previouslyActiveChunks = new List<ChunkCoord>(activeChunks);
@@ -132,12 +132,20 @@ public class World : MonoBehaviour
 
     }
 
-    ChunkCoord GetChunkFromVector3(Vector3 worldPosition)
+    ChunkCoord GetChunkCoordFromVector3(Vector3 worldPosition)
     {
         int x = Mathf.FloorToInt(worldPosition.x / Chunk.CHUNK_WIDTH);
         int y = Mathf.FloorToInt(worldPosition.z / Chunk.CHUNK_WIDTH);
 
         return new ChunkCoord(x, y);
+    }
+
+    public Chunk GetChunkFromVector3(Vector3 worldPosition)
+    {
+        int x = Mathf.FloorToInt(worldPosition.x / Chunk.CHUNK_WIDTH);
+        int y = Mathf.FloorToInt(worldPosition.z / Chunk.CHUNK_WIDTH);
+
+        return chunks[x, y];
     }
 
     bool IsChunkInWorld(ChunkCoord coord)
