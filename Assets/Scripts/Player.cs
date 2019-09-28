@@ -47,11 +47,17 @@ public class Player : MonoBehaviour
 
     Vector3 placeBlockPosition;
 
+    /// <summary>
+    /// Sets the cursor (could be anywhere really)
+    /// </summary>
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+    /// <summary>
+    /// Function that checks the input and places/removes blocks
+    /// </summary>
     void Update()
     {
         GetPlayerInput();
@@ -74,6 +80,9 @@ public class Player : MonoBehaviour
         PlaceBlockHighlight();
     }
 
+    /// <summary>
+    /// Function to update the transform of the player
+    /// </summary>
     void FixedUpdate()
     {
         UpdateVelocity();
@@ -87,6 +96,9 @@ public class Player : MonoBehaviour
         transform.Translate(velocity, Space.World);
     }
 
+    /// <summary>
+    /// Function to get and update the inputs
+    /// </summary>
     void GetPlayerInput()
     {
         horizontal = Input.GetAxis("Horizontal");
@@ -134,6 +146,9 @@ public class Player : MonoBehaviour
         }
     }   
 
+    /// <summary>
+    /// Function that updates the movement of the player
+    /// </summary>
     void UpdateVelocity()
     {
         if (isSprinting)
@@ -167,6 +182,10 @@ public class Player : MonoBehaviour
             velocity.z = 0;
         }
     }
+
+    /// <summary>
+    /// Function that updates the rotation of the camera and the player
+    /// </summary>
     void UpdateRotation()
     {
         rotationX += mouseHorizontal * viewSpeed;
@@ -177,7 +196,11 @@ public class Player : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, rotationX, 0f);
     }
 
-
+    /// <summary>
+    /// Function that checks if the player should fall or not
+    /// </summary>
+    /// <param name="downSpeed">The down speed to check</param>
+    /// <returns>the down speed modified or not</returns>
     float CheckDownSpeed(float downSpeed)
     {
         Vector3 leftBack =   new Vector3(transform.position.x - colliderWidth, transform.position.y + downSpeed, transform.position.z - colliderWidth);
@@ -200,6 +223,11 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Function that checks if the player can continue jumping or not
+    /// </summary>
+    /// <param name="upSpeed">The speed when jumping or going up</param>
+    /// <returns>The up speed modified</returns>
     float CheckUpSpeed(float upSpeed)
     {
         Vector3 leftBack =   new Vector3(transform.position.x - colliderWidth, transform.position.y + 2f + upSpeed, transform.position.z - colliderWidth);
@@ -221,27 +249,49 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Function that checks if there is a block in front
+    /// </summary>
+    /// <returns>Boolean value that tells if the player is in collision or not</returns>
     bool CheckFrontCollision()
     {
         return (world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y, transform.position.z + colliderWidth)) ||
                 world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y + 1, transform.position.z + colliderWidth)));
     }
+
+    /// <summary>
+    /// Function that checks if there is a block in the back
+    /// </summary>
+    /// <returns>Boolean value that tells if the player is in collision or not</returns>
     bool CheckBackCollision()
     {
         return (world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y, transform.position.z - colliderWidth)) ||
                 world.CheckForVoxel(new Vector3(transform.position.x, transform.position.y + 1, transform.position.z - colliderWidth)));
     }
+
+    /// <summary>
+    /// Function that checks if there is a block on the left
+    /// </summary>
+    /// <returns>Boolean value that tells if the player is in collision or not</returns>
     bool CheckLeftCollision()
     {
         return (world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y, transform.position.z)) ||
                 world.CheckForVoxel(new Vector3(transform.position.x - colliderWidth, transform.position.y + 1, transform.position.z)));
     }
+
+    /// <summary>
+    /// Function that checks if there is a block on the right
+    /// </summary>
+    /// <returns>Boolean value that tells if the player is in collision or not</returns>
     bool CheckRightCollision()
     {
         return (world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y, transform.position.z)) ||
                 world.CheckForVoxel(new Vector3(transform.position.x + colliderWidth, transform.position.y + 1, transform.position.z)));
     }
 
+    /// <summary>
+    /// Function to jump and rise the player
+    /// </summary>
     void Jump()
     {
         verticalMomentum = jumpForce;
@@ -249,6 +299,9 @@ public class Player : MonoBehaviour
         isJumping = false;
     }
 
+    /// <summary>
+    /// Function that places the highlight block
+    /// </summary>
     void PlaceBlockHighlight()
     {
         float step = checkIncrement;

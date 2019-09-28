@@ -19,7 +19,7 @@ public class Chunk
     int vertexIndex = 0;
     List<Vector3> meshVertices = new List<Vector3>();
     List<int> meshTriangles = new List<int>();
-    List<Vector2> uvs = new List<Vector2>();
+    List<Vector2> meshUvs = new List<Vector2>();
 
     // array to indicate what type of block is used. Air is not added to the mesh data
     public byte[,,] voxelMap = new byte[CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_WIDTH];
@@ -33,6 +33,12 @@ public class Chunk
 
     public bool isVoxelMapPopulated = false;
 
+    /// <summary>
+    /// Constructor of the chunk
+    /// </summary>
+    /// <param name="worldReference"> A ref to the world object in which the chunk exists. Gives what voxel to create </param>
+    /// <param name="position"> The ChunkCoord that represents the position </param>
+    /// <param name="generateOnLoad"> A boolean to tell if the chunk must be generated now or not </param>
     public Chunk(World worldReference, ChunkCoord position, bool generateOnLoad)
     {
         world = worldReference;
@@ -45,6 +51,9 @@ public class Chunk
         }
     }
 
+    /// <summary>
+    /// Function to initialize the components and data of the chunk
+    /// </summary>
     public void InitChunk()
     {
         chunkGameObject = new GameObject();
@@ -88,7 +97,7 @@ public class Chunk
     /// Function to check if the voxel should be added to mesh data to be displayed or not
     /// </summary>
     /// <param name="voxelPosition">Position of the voxel relative to the chunk</param>
-    /// <returns></returns>
+    /// <returns>Boolean value representing if the voxel is visible to the player</returns>
     bool CheckVoxel(Vector3 voxelPosition)
     {
         int x = Mathf.FloorToInt(voxelPosition.x);
@@ -149,6 +158,11 @@ public class Chunk
         }
     }
 
+    /// <summary>
+    /// Function that returns the blocktype at a world position
+    /// </summary>
+    /// <param name="globalPosition"></param>
+    /// <returns></returns>
     public byte GetVoxelFromGlobalVector3(Vector3 globalPosition)
     {
         int x = Mathf.FloorToInt(globalPosition.x);
@@ -169,7 +183,7 @@ public class Chunk
         Mesh mesh = new Mesh();
         mesh.vertices = meshVertices.ToArray();
         mesh.triangles = meshTriangles.ToArray();
-        mesh.uv = uvs.ToArray(); // for use with the material and texture. We make a materials folder and add a material named Voxels
+        mesh.uv = meshUvs.ToArray(); // for use with the material and texture. We make a materials folder and add a material named Voxels
         // the material will not be smooth nor metallic. In chunk's mesh renderer drag and drop the new material
         // We can make a new textures folder and add to it the given texture file.
         // We will pull the ArrowTexture in the folder, put the max size to 32, wrap mode to Clamp and filter to point for no texture smoothing
@@ -180,14 +194,22 @@ public class Chunk
         meshFilter.mesh = mesh;
     }
 
+    /// <summary>
+    /// Function to empty the lists
+    /// </summary>
     void ClearMeshData()
     {
         vertexIndex = 0;
         meshTriangles.Clear();
         meshVertices.Clear();
-        uvs.Clear();
+        meshUvs.Clear();
     }
 
+    /// <summary>
+    /// Function to change a voxel's blocktype at a position
+    /// </summary>
+    /// <param name="voxelPosition">The position of the voxel</param>
+    /// <param name="newBlockID">The new block id to replace the block id at that position</param>
     public void EditVoxel(Vector3 voxelPosition, byte newBlockID)
     {
         int x = Mathf.FloorToInt(voxelPosition.x);
@@ -204,6 +226,14 @@ public class Chunk
         UpdateChunkData();
     }
 
+    /// <summary>
+    /// Function that updates the surrounding chunks of a voxel in case they are adjacent to one face
+    /// 
+    /// note: might want to change the parameters to only one vector3
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="z"></param>
     void UpdateSurroundingVoxels(int x, int y, int z)
     {
         Vector3 thisVoxel = new Vector3(x, y, z);
@@ -236,17 +266,29 @@ public class Chunk
 
         y = 1f - y - VoxelData.NormalizedBlockTextureSize;
 
-        uvs.Add(new Vector2(x, y));
-        uvs.Add(new Vector2(x, y + VoxelData.NormalizedBlockTextureSize));
-        uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y));
-        uvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y + VoxelData.NormalizedBlockTextureSize));
+        meshUvs.Add(new Vector2(x, y));
+        meshUvs.Add(new Vector2(x, y + VoxelData.NormalizedBlockTextureSize));
+        meshUvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y));
+        meshUvs.Add(new Vector2(x + VoxelData.NormalizedBlockTextureSize, y + VoxelData.NormalizedBlockTextureSize));
     }
 
+    /// <summary>
+    /// Function to check if the voxel is in the chunk
+    /// 
+    /// note: might want to change the parameters to only one vector3
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="z"></param>
+    /// <returns></returns>
     bool IsVoxelInChunk(int x, int y, int z)
     {
         return !(x < 0 || x > CHUNK_WIDTH - 1 || y < 0 || y > CHUNK_HEIGHT - 1 || z < 0 || z > CHUNK_WIDTH - 1);
     }
 
+    /// <summary>
+    /// Property to set the gameObject to active or not
+    /// </summary>
     public bool isActive
     {
         get { return isChunkActive; }
@@ -260,6 +302,9 @@ public class Chunk
         }
     }
 
+    /// <summary>
+    /// Property that gives the position
+    /// </summary>
     public Vector3 position
     {
         get { return chunkGameObject.transform.position; }

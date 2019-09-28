@@ -27,12 +27,15 @@ public class World : MonoBehaviour
 
     public int seed;
 
-    public BiomeAttributes biome;
+    public BiomeAttributes biome; // Contains data on height, density and variation of terrain, including nodes
 
     List<ChunkCoord> chunksToCreate = new List<ChunkCoord>();
 
     bool isCreatingChunks;
 
+    /// <summary>
+    /// Generates the starting chunks for the spawn point and initializes the spawn position
+    /// </summary>
     void Start()
     {
         Random.InitState(seed);
@@ -42,6 +45,11 @@ public class World : MonoBehaviour
         playerLastChunkCoord = GetChunkCoordFromVector3(player.position);
     }
 
+    /// <summary>
+    /// Updates the chunks, creating missing chunks (by coroutine), enabling or disabling chunks out or in the view distance
+    /// 
+    /// note: Here we really should add pooling for the chunks, would be much more efficient.
+    /// </summary>
     void Update()
     {
         playerChunkCoord = GetChunkCoordFromVector3(player.position);
@@ -56,6 +64,9 @@ public class World : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Function to generate the first few chunks, filling with initial chunks
+    /// </summary>
     void GenerateWorld()
     {
         for (int i = (WORLD_WIDTH_IN_CHUNKS / 2) - VIEW_DISTANCE_IN_CHUNKS; i < (WORLD_WIDTH_IN_CHUNKS / 2) + VIEW_DISTANCE_IN_CHUNKS; i++)
@@ -69,6 +80,12 @@ public class World : MonoBehaviour
         player.position = spawnPosition;
     }
 
+    /// <summary>
+    /// Co-routine that creates the chunk and leaves mid-way in case it is too cpu-heavy
+    /// 
+    /// note: Too much stutters might indicate that adding more coroutines would be better
+    /// </summary>
+    /// <returns> IEnumerator for the coroutine </returns>
     IEnumerator CreateChunks()
     {
         isCreatingChunks = true;
@@ -83,12 +100,9 @@ public class World : MonoBehaviour
         isCreatingChunks = false;
     }
 
-    //void CreateChunk(int x, int y)
-    //{
-    //    chunks[x, y] = new Chunk(this, new ChunkCoord(x, y));
-    //    activeChunks.Add(new ChunkCoord(x, y));
-    //}
-
+    /// <summary>
+    /// Checks what chunks must be removed or added and fills the "to-add" chunk list
+    /// </summary>
     void CheckViewDistance()
     {
         ChunkCoord coord = GetChunkCoordFromVector3(player.position);
@@ -132,6 +146,11 @@ public class World : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Function to get a chunkcoord from a world position
+    /// </summary>
+    /// <param name="worldPosition"> World position </param>
+    /// <returns> A chunkcoord based on the x and y position </returns>
     ChunkCoord GetChunkCoordFromVector3(Vector3 worldPosition)
     {
         int x = Mathf.FloorToInt(worldPosition.x / Chunk.CHUNK_WIDTH);
@@ -140,6 +159,11 @@ public class World : MonoBehaviour
         return new ChunkCoord(x, y);
     }
 
+    /// <summary>
+    /// Function that returns a ref to a chunk from a world position
+    /// </summary>
+    /// <param name="worldPosition"> World position </param>
+    /// <returns> A ref to the chunk </returns>
     public Chunk GetChunkFromVector3(Vector3 worldPosition)
     {
         int x = Mathf.FloorToInt(worldPosition.x / Chunk.CHUNK_WIDTH);
@@ -148,29 +172,44 @@ public class World : MonoBehaviour
         return chunks[x, y];
     }
 
+    /// <summary>
+    /// Function that checks if a chunkcoord is within the world space
+    /// </summary>
+    /// <param name="coord"> chunkcoord to check </param>
+    /// <returns> Boolean value that tells if the chunk is in the world </returns>
     bool IsChunkInWorld(ChunkCoord coord)
     {
         return coord.x > 0 && coord.x < WORLD_WIDTH_IN_CHUNKS - 1 && coord.y > 0 && coord.y < WORLD_WIDTH_IN_CHUNKS - 1;
     }
 
-    bool IsVoxelInWorld(Vector3 position)
+    /// <summary>
+    /// Function that checks if the voxel at a position is within the world
+    /// </summary>
+    /// <param name="voxelPosition"> position of the voxel to check </param>
+    /// <returns> A boolean value that tells if the voxel if within the world </returns>
+    bool IsVoxelInWorld(Vector3 voxelPosition)
     {
-        return position.x >= 0 && position.x < WORLD_WIDTH_IN_VOXELS && position.y < Chunk.CHUNK_HEIGHT && position.z >= 0 && position.z < WORLD_WIDTH_IN_VOXELS;
+        return voxelPosition.x >= 0 && voxelPosition.x < WORLD_WIDTH_IN_VOXELS && voxelPosition.y < Chunk.CHUNK_HEIGHT && voxelPosition.z >= 0 && voxelPosition.z < WORLD_WIDTH_IN_VOXELS;
     }
 
-    public byte GetVoxel(Vector3 position)
+    /// <summary>
+    /// Function that determines what voxel should be at the said position.
+    /// </summary>
+    /// <param name="voxelPosition"> World position of a voxel </param>
+    /// <returns> What the type of the voxel should be </returns>
+    public byte GetVoxel(Vector3 voxelPosition)
     {
-        int y = Mathf.FloorToInt(position.y);
+        int y = Mathf.FloorToInt(voxelPosition.y);
 
         // Immutable pass - things that will always be the case, like outside the world is air
 
-        if (!IsVoxelInWorld(position))
+        if (!IsVoxelInWorld(voxelPosition))
             return 0;
         if (y == 0)
             return 1; // If it is the lowest layer, return bedrock
 
         // First terrain pass - first height variation
-        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DNoise(new Vector2(position.x, position.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
+        int terrainHeight = Mathf.FloorToInt(biome.terrainHeight * Noise.Get2DNoise(new Vector2(voxelPosition.x, voxelPosition.z), 0, biome.terrainScale)) + biome.solidGroundHeight;
         byte voxelValue = 0;
 
         if (y == terrainHeight)
@@ -188,7 +227,7 @@ public class World : MonoBehaviour
             foreach (Lode lode in biome.lodes)
             {
                 if (y > lode.minHeight && y < lode.maxHeight)
-                    if (Noise.Get3DNoise(position, lode.noiseOffset, lode.scale, lode.threshold))
+                    if (Noise.Get3DNoise(voxelPosition, lode.noiseOffset, lode.scale, lode.threshold))
                         voxelValue = lode.blockID;
             }
         }
@@ -196,17 +235,23 @@ public class World : MonoBehaviour
         return voxelValue;
     }
 
-    public bool CheckForVoxel(Vector3 position)
+    /// <summary>
+    /// Function that checks if the voxel at that position is set to a solid or not solid state.
+    /// Determines if the voxel is to be visible or not
+    /// </summary>
+    /// <param name="voxelPosition"> A world position for the voxel checked </param>
+    /// <returns> A boolean value that represents if the voxel is to be visible by the player or not </returns>
+    public bool CheckForVoxel(Vector3 voxelPosition)
     {
-        ChunkCoord thisChunk = new ChunkCoord(position);
+        ChunkCoord thisChunk = new ChunkCoord(voxelPosition);
 
-        if (!IsChunkInWorld(thisChunk) || position.y < 0 || position.y > Chunk.CHUNK_HEIGHT)
+        if (!IsChunkInWorld(thisChunk) || voxelPosition.y < 0 || voxelPosition.y > Chunk.CHUNK_HEIGHT)
             return false;
 
         if (chunks[thisChunk.x, thisChunk.y] != null && chunks[thisChunk.x, thisChunk.y].isVoxelMapPopulated)
-            return blocktypes[chunks[thisChunk.x, thisChunk.y].GetVoxelFromGlobalVector3(position)].isSolid;
+            return blocktypes[chunks[thisChunk.x, thisChunk.y].GetVoxelFromGlobalVector3(voxelPosition)].isSolid;
 
-        return blocktypes[GetVoxel(position)].isSolid;
+        return blocktypes[GetVoxel(voxelPosition)].isSolid;
     }
 }
 
